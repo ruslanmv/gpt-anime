@@ -76,7 +76,7 @@ A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the 
     yarn install
    ```
 
-    ![image-20231012152607271](assets/images/posts/README/image-20231012152607271.png)
+   ![image-20231012152607271](assets/images/posts/README/image-20231012152607271.png)
 
    
 
@@ -87,6 +87,22 @@ A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the 
    ```
 
    
+
+   To run with optimizer on in dev mode (just for testing, it's faster to leave it off): ``. 
+
+   ```
+   yarn web:extract
+   ```
+
+   To build for production 
+
+   ```
+   yarn web:prod
+   ```
+
+   To see debug output to verify the compiler, add `// debug` as a comment to the top of any file.
+
+   - Expo local dev: `yarn native`
 
 # Android & iOS
 
@@ -123,3 +139,11 @@ pngquant --quality 10-80 --speed 1 --output output_reduced0.png --force Image_0.
 References:
 
 It was built with the [next+expo+solito starter template.](https://github.com/tamagui/tamagui/tree/master/starters/next-expo-solito)
+
+## [How to run the project]()
+
+1. Clone the repository
+2. Add API keys to `.env.local` file
+3. Run `yarn install` to install the dependencies
+4. Run `yarn dev` to start the development server
+5. Navigate to `localhost:3000` to view the project
