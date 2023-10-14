@@ -47,6 +47,9 @@ const handler = async (req: Request): Promise<Response> => {
 
   if (process.env.NODE_ENV === "development") {
     console.log("Input messages (with initial bot message):", messages);
+    //console.log(`API OPEN AI :${process.env.OPENAI_API_KEY}`);
+
+
   }
 
   const payload: OpenAIPayload = {

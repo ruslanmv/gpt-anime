@@ -2,17 +2,15 @@
 
 Hello everyone,  the purpose of this repository is to create  beautiful 3D chatbot with ChatGPT.
 
-Some times when you are watching anime and you liked the character, you can think if you can speak with your favorite cartoon character or a simple favorite  AI model Gideon of  the TV series [DC's Legends of Tomorrow.](https://en.wikipedia.org/wiki/Legends_of_Tomorrow) 
+Some times when you are watching anime and you liked the character, you can think if you can speak with your favorite cartoon character or a simple favorite  AI model Gideon of  the TV series DC's Legends of Tomorrow
 
-In this repository we will make this possible.
+In this repository we will make this possible. 
 
 This is a repo for the [gpt-anime project.](https://www.gpt-anime.com/)
 
 ## Setup
 
-An OpenAI API key is required. Check out the OPENAI_API_KEY env var in the .env file.
 
-A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the .env file.
 
 1. **Install npm** - [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) and node version 18.14.2 are recommended (this is the LTS version as of June 25 2023)
 
@@ -80,13 +78,17 @@ A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the 
 
    
 
-5. **Run the project** -  In the root folder of this project , run 
+5. **Setup credentials**
+
+   An OpenAI API key is required. Check out the OPENAI_API_KEY env var in the .env file.
+
+   A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the .env file.
+
+6. **Run the project** -  In the root folder of this project , run 
 
    ```
    yarn web
    ```
-
-   
 
    To run with optimizer on in dev mode (just for testing, it's faster to leave it off): ``. 
 
@@ -103,6 +105,30 @@ A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the 
    To see debug output to verify the compiler, add `// debug` as a comment to the top of any file.
 
    - Expo local dev: `yarn native`
+
+  "native": "cd apps/expo && yarn start",
+
+  "watch": "yarn workspaces foreach -pi run watch",
+
+  "vercel:install": "yarn set version stable && yarn install",
+
+  "web": "yarn build && cd apps/next && yarn next",
+
+  "web:extract": "DISABLE_EXTRACTION=false yarn workspace next-app dev",
+
+  "web:prod": "yarn workspace next-app build",
+
+  "web:prod:serve": "yarn workspace next-app serve",
+
+  "fix": "manypkg fix",
+
+  "postinstall": "yarn build",
+
+  "build": "yarn workspaces foreach --exclude next-app -pi run build",
+
+  "upgrade:tamagui": "manypkg upgrade tamagui && manypkg upgrade @tamagui && manypkg upgrade tamagui-loader && manypkg upgrade react-native-web-lite"
+
+ 
 
 # Android & iOS
 
