@@ -79,7 +79,6 @@ const handler = async (req: Request): Promise<Response> => {
     //console.log(`API OPEN AI :${process.env.OPENAI_API_KEY}`);
     console.log(`AI :`, aiResponse);
 
-
   }
 
   try {
@@ -91,11 +90,20 @@ const handler = async (req: Request): Promise<Response> => {
       status: 500,
     });
   }
+  /*
+    // Create a JSON response containing both text and audio
+    const jsonResponse = {
+      text: aiResponse,
+      audio: audioContent,
+    };
+  */
 
+  // Wait for both promises to resolve
+  const [aiResponsePromise, audioContentPromise] = await Promise.all([aiResponse, audioContent]);
   // Create a JSON response containing both text and audio
   const jsonResponse = {
-    text: aiResponse,
-    audio: audioContent,
+    text: aiResponsePromise,
+    audio: audioContentPromise,
   };
 
   // Create a new Response object with the JSON response and appropriate headers
