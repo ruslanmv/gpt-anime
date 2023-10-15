@@ -90,13 +90,6 @@ const handler = async (req: Request): Promise<Response> => {
       status: 500,
     });
   }
-  /*
-    // Create a JSON response containing both text and audio
-    const jsonResponse = {
-      text: aiResponse,
-      audio: audioContent,
-    };
-  */
 
   // Wait for both promises to resolve
   const [aiResponsePromise, audioContentPromise] = await Promise.all([aiResponse, audioContent]);
