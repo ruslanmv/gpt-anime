@@ -8,51 +8,103 @@ In this repository we will make this possible.
 
 This is a repo for the [gpt-anime project.](https://www.gpt-anime.com/)
 
+We are going to install This ChatBot on  Ubuntu 22.04  by using  Windows 11.
+
 ## Setup
 
+1. Search for **Command Prompt**, right-click the top result, and select the **Run as administrator** option.
 
-
-1. **Install npm** - [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) and node version 18.14.2 are recommended (this is the LTS version as of June 25 2023)
-
-   We are going to use ubuntu to run this app. If you have windows you can just install 
+2. Type the following command to view a list of all available distros and press **Enter**:
 
    ```
-   bash
+   wsl --list
    ```
 
-   ```
-   sudo apt apt-get update
-   ```
+   **Quick tip:** You can also use this variant `wsl -l` of the command.
+
+3. Type the following command to set the Linux distro as the new default on WSL and press **Enter**:
 
    ```
-   sudo apt install npm 
+   wsl --setdefault DISTRO-NAME
    ```
 
-   ```
-   sudo apt install curl 
-   ```
+   In the command, replace **“DISTRO-NAME”** with the name of the distro to set it as default (see **step 3**). For instance, this command makes Ubuntu Linux the default distro on Windows 11:
 
    ```
-   curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+   wsl --setdefault Ubuntu-22.04
    ```
 
-   ```
-   source ~/.bashrc
-   ```
+We are going to use ubuntu to run this app. If you have windows you can just install 
 
-   ```
-   nvm install node
-   ```
+```
+bash
+```
 
-   ![image-20231012111632468](assets/images/posts/README/image-20231012111632468.png)
+```
+sudo apt-get update
+```
 
-   ```
-   nvm install v18.14.2
-   ```
+```
+sudo apt install build-essential
+```
 
-   ![image-20231012111731020](assets/images/posts/README/image-20231012111731020.png)
 
-2. **Make sure npm is installed**. To check if it's installed you can run 
+
+## Add NodeSource PPA
+
+ENter the following command which will add the PPA sources for NodeJS 18 on your Ubuntu 22.04 installation:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+```
+
+## Install NodeJS 18
+
+In the previous step, we added the PPA source. This allows the APT package manager to install NodeJS 18 on our Ubuntu 22.04 installation. Run the following command:
+
+```
+NODE_MAJOR=18
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+```
+
+```bash
+sudo apt-get update
+sudo apt-get install nodejs -y
+```
+
+##  Confirm the installed version of NodeJS
+
+Finally, let's check to see the version of NodeJS installed is 18.x as expected. Run the following command:
+
+```bash
+node -v
+```
+
+We should see an output that confirms the version of NodeJS being 18.x on our Ubuntu 22.04 installation.
+
+
+
+```
+sudo apt install curl 
+curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash 
+```
+
+```
+source ~/.profile 
+```
+
+For updates visit this [repo](https://github.com/nodesource/distributions)
+
+```
+nvm install v18.14.2
+```
+
+
+
+1. **Make sure npm is installed**. To check if it's installed you can run 
 
    ```
    npm -v
@@ -60,34 +112,34 @@ This is a repo for the [gpt-anime project.](https://www.gpt-anime.com/)
 
    
 
-3. **Install yarn** 
+2. **Install yarn** 
 
    ```
    npm install  --global yarn
    ```
 
-   ![image-20231012112026097](assets/images/posts/README/image-20231012112026097.png)
+   
 
-4. **Install the dependencies** - In the root folder of this project  run 
+3. **Install the dependencies** - In the root folder of this project  run 
 
    ```
     yarn install
    ```
 
-   ![image-20231012152607271](assets/images/posts/README/image-20231012152607271.png)
-
    
 
-5. **Setup credentials**
+   ![image-20231015233704729](assets/images/posts/README/image-20231015233704729.png)
+
+   **Setup credentials**
 
    An OpenAI API key is required. Check out the OPENAI_API_KEY env var in the .env file.
 
    A Google Cloud API key is required. Check out the GOOGLE_API_KEY env var in the .env file.
 
-6. **Run the project** -  In the root folder of this project , run 
+4. **Run the project** -  In the root folder of this project , run 
 
    ```
-   yarn web
+   yarn
    ```
 
    To run with optimizer on in dev mode (just for testing, it's faster to leave it off): ``. 
@@ -104,29 +156,6 @@ This is a repo for the [gpt-anime project.](https://www.gpt-anime.com/)
 
    To see debug output to verify the compiler, add `// debug` as a comment to the top of any file.
 
-   - Expo local dev: `yarn native`
-
-  "native": "cd apps/expo && yarn start",
-
-  "watch": "yarn workspaces foreach -pi run watch",
-
-  "vercel:install": "yarn set version stable && yarn install",
-
-  "web": "yarn build && cd apps/next && yarn next",
-
-  "web:extract": "DISABLE_EXTRACTION=false yarn workspace next-app dev",
-
-  "web:prod": "yarn workspace next-app build",
-
-  "web:prod:serve": "yarn workspace next-app serve",
-
-  "fix": "manypkg fix",
-
-  "postinstall": "yarn build",
-
-  "build": "yarn workspaces foreach --exclude next-app -pi run build",
-
-  "upgrade:tamagui": "manypkg upgrade tamagui && manypkg upgrade @tamagui && manypkg upgrade tamagui-loader && manypkg upgrade react-native-web-lite"
 
  
 

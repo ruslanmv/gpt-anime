@@ -17,8 +17,8 @@ function MyApp({ Component, pageProps }: SolitoAppProps) {
   return (
     <>
       <Head>
-        <title>GPT Hangout</title>
-        <meta name="description" content="Hangout with GPT characters" />
+        <title>GPT Anime</title>
+        <meta name="description" content="Anime with GPT characters" />
         {/* <link rel="icon" href="/favicon.ico" /> */}
       </Head>
       <ThemeProvider>
