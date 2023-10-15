@@ -1,11 +1,26 @@
 {
   "compilerOptions": {
-    "strictNullChecks": true,
-    "noUncheckedIndexedAccess": true,
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
     "paths": {
-      "app/*": ["./packages/app/*"],
-      "@my/ui/*": ["./packages/ui/*"]
-    }
+      "react-native": [
+        "react-native-web"
+      ]
+    },
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true
   },
-  "extends": "expo/tsconfig.base"
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

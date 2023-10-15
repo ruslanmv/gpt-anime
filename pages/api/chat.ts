@@ -47,9 +47,6 @@ const handler = async (req: Request): Promise<Response> => {
 
   if (process.env.NODE_ENV === "development") {
     console.log("Input messages (with initial bot message):", messages);
-    //console.log(`API OPEN AI :${process.env.OPENAI_API_KEY}`);
-
-
   }
 
   const payload: OpenAIPayload = {
@@ -91,14 +88,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  // Wait for both promises to resolve
-  const [aiResponsePromise, audioContentPromise] = await Promise.all([aiResponse, audioContent]);
   // Create a JSON response containing both text and audio
   const jsonResponse = {
-    text: aiResponsePromise,
-    audio: audioContentPromise,
+    text: aiResponse,
+    audio: audioContent,
   };
-
 
   // Create a new Response object with the JSON response and appropriate headers
   return new Response(JSON.stringify(jsonResponse), {
