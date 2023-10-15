@@ -45,13 +45,6 @@ const handler = async (req: Request): Promise<Response> => {
   // Prepend the initial bot message containing the prompt.
   messages.unshift(initialBotMessage);
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("Input messages (with initial bot message):", messages);
-    //console.log(`API OPEN AI :${process.env.OPENAI_API_KEY}`);
-
-
-  }
-
   const payload: OpenAIPayload = {
     model: "gpt-3.5-turbo",
     messages,
@@ -79,6 +72,14 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ error: "Error processing OpenAI response." }), {
       status: 500,
     });
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    console.log("Input messages (with initial bot message):", messages);
+    //console.log(`API OPEN AI :${process.env.OPENAI_API_KEY}`);
+    console.log(`AI :`, aiResponse);
+
+
   }
 
   try {

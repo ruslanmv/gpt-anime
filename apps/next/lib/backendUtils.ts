@@ -70,77 +70,6 @@ export async function OpenAIStream(payload: OpenAIStreamPayload) {
   return stream;
 }
 
-//
-////
-////// For testing purposes.
-
-export function recursiveStreamEnqueue(
-  controller: ReadableStreamDefaultController<any>,
-  messageTokens: string[],
-  index: number,
-  timeBetweenTokens = 100
-) {
-  if (index >= messageTokens.length) {
-    controller.close();
-    return;
-  }
-
-  setTimeout(function () {
-    console.log(messageTokens[index]);
-    var enc = new TextEncoder();
-    controller.enqueue(enc.encode(messageTokens[index] + " "));
-    recursiveStreamEnqueue(controller, messageTokens, ++index);
-  }, timeBetweenTokens);
-}
-
-export function streamMock(messageTokens: string[]): ReadableStream {
-  return new ReadableStream({
-    start(controller) {
-      recursiveStreamEnqueue(controller, messageTokens, 0);
-    },
-  });
-}
-
-export async function synthesizeSpeech(text: string): Promise<string> {
-  if (!process.env.GOOGLE_API_KEY) {
-    throw new Error("GOOGLE_API_KEY not found in the environment");
-  }
-
-  if (typeof text !== "string") {
-    throw new Error(`Invalid input type: ${typeof text}. Type has to be text or SSML.`);
-  }
-
-  const apiKey = process.env.GOOGLE_API_KEY;
-  const apiURL = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
-
-  const requestBody = {
-    input: {
-      text,
-    },
-    voice: { languageCode: "en-US", name: "en-US-Neural2-H" },
-    audioConfig: {
-      audioEncoding: "MP3",
-    },
-  };
-
-  const response = await fetch(apiURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Google Cloud TTS API Error: ${errorData.error.message}`);
-  }
-
-  const responseData = await response.json();
-  const audioContent = responseData.audioContent;
-
-  return audioContent;
-}
 
 export type OpenAIPayload = {
   model: string;
@@ -192,4 +121,69 @@ export const OpenAI = async (payload: OpenAIPayload): Promise<OpenAIResponse> =>
 };
 
 
+////// For testing purposes.
 
+export function recursiveStreamEnqueue(
+  controller: ReadableStreamDefaultController<any>,
+  messageTokens: string[],
+  index: number,
+  timeBetweenTokens = 100
+) {
+  if (index >= messageTokens.length) {
+    controller.close();
+    return;
+  }
+
+  setTimeout(function () {
+    console.log(messageTokens[index]);
+    var enc = new TextEncoder();
+    controller.enqueue(enc.encode(messageTokens[index] + " "));
+    recursiveStreamEnqueue(controller, messageTokens, ++index);
+  }, timeBetweenTokens);
+}
+
+export function streamMock(messageTokens: string[]): ReadableStream {
+  return new ReadableStream({
+    start(controller) {
+      recursiveStreamEnqueue(controller, messageTokens, 0);
+    },
+  });
+}
+////////////
+
+export async function synthesizeSpeech(text: string): Promise<string> {
+  if (!process.env.GOOGLE_API_KEY) {
+    throw new Error("GOOGLE_API_KEY not found in the environment");
+  }
+  if (typeof text !== "string") {
+    throw new Error(`Invalid input type: ${typeof text}. Type has to be text or SSML.`);
+  }
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const apiURL = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+  const requestBody = {
+    input: {
+      text,
+    },
+    //voice: { languageCode: 'en-US', name: 'en-US-Neural2-H', ssmlGender: 'FEMALE' },
+    voice: { languageCode: 'it-IT', name: 'it-IT-Standard-B', ssmlGender: 'FEMALE' },
+    audioConfig: {
+      audioEncoding: "MP3",
+    },
+  };
+  const response = await fetch(apiURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Google Cloud TTS API Error: ${errorData.error.message}`);
+  }
+  const responseData = await response.json();
+  const audioContent = responseData.audioContent;
+
+  return audioContent;
+}
