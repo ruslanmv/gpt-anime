@@ -164,8 +164,8 @@ export async function synthesizeSpeech(text: string): Promise<string> {
     input: {
       text,
     },
-    //voice: { languageCode: 'en-US', name: 'en-US-Neural2-H', ssmlGender: 'FEMALE' },
-    voice: { languageCode: 'it-IT', name: 'it-IT-Standard-B', ssmlGender: 'FEMALE' },
+    voice: { languageCode: 'en-US', name: 'en-US-Neural2-H', ssmlGender: 'FEMALE' },
+    //voice: { languageCode: 'it-IT', name: 'it-IT-Standard-B', ssmlGender: 'FEMALE' },
     audioConfig: {
       audioEncoding: "MP3",
     },
