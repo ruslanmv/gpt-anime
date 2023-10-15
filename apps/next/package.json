@@ -19,7 +19,7 @@
     "eventsource-parser": "^0.0.5",
     "lodash": "^4.17.21",
     "next": "^13.0.6",
-    "openai": "^3.2.1",
+    "openai": "^4.12.1",
     "raf": "^3.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
