@@ -5,7 +5,9 @@ import { Humanoid } from "lib/babylonjs/Humanoid";
 import { initBabylon } from "lib/babylonjs/init";
 import { isBabylonInspectorShowing } from "lib/utils";
 import React, { useEffect, useRef, useState } from "react";
+
 let didInit = false;
+
 // XXX: Setting the following to "false" helps when developing UI stuff. Because the canvas is not rendered, the UI is much faster to develop.
 const showCanvas = true;
 
@@ -23,7 +25,6 @@ const CanvasThatDoesNotReRender = React.memo(function CanvasThatDoesNotReRender(
   useEffect(() => {
     if (didInit) {
       // If we"re here, then strict mode is on - reactStrictMode is true on the next.config.js
-
       console.warn("Warning - tried to initialize twice. Will skip 2nd initialization.");
       return;
     }
@@ -72,7 +73,6 @@ export default function Game() {
     >
       {/* Loading is wrapped in a div because of this: https://stackoverflow.com/questions/54880669/react-domexception-failed-to-execute-removechild-on-node-the-node-to-be-re  */}
       {/* The reason is babylonJS adds a sneaky parent div to the canvas */}
-
       <Loading isLoading={isLoading} />
 
       <div
@@ -121,9 +121,9 @@ export default function Game() {
             const onAudioEnd = () => {
               humanoidRef.current?.talkAnimationEnd("onAudioEnd");
             };
+
             // XXX: pause event is emitted after the pause() method is called or BEFORE an ended or seeking event
             // newAudio.addEventListener("pause", onAudioEnd);
-
             newAudio.addEventListener("ended", onAudioEnd);
 
             newAudio.play();

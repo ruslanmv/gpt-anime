@@ -28,8 +28,8 @@ export type ChatMessage = {
 export type ChatServerResponse =
   | string
   | {
-    error: string;
-  };
+      error: string;
+    };
 
 type ChatProps = StackPropsBase & {
   audioReceivedCallback: (audio: HTMLAudioElement | null) => void;
@@ -38,17 +38,15 @@ type ChatProps = StackPropsBase & {
 // This function is called when a user wants to send a message to the backend. It does the following:
 // 1. Appends the user's message to the existing messages array. This shows the message in the chat's scroll view.
 // 2. Sends a POST request to the backend and waits for the server side events.
-// Function to send a message to the backend and handle responses
-const send = async (
-  textAreaRef: ChatHookReturnType["textAreaRef"],               // Reference to the text input field
-  setChatState: ChatHookReturnType["setChatState"],              // Function to update the chat state
-  appendBotMessage: ChatHookReturnType["appendBotMessage"],      // Function to add a bot message to the chat
-  appendUserMessage: ChatHookReturnType["appendUserMessage"],    // Function to add a user message to the chat
-  audioReceivedCallback: ChatProps["audioReceivedCallback"],     // Callback for receiving audio responses
-  isLoadingMessage: boolean                                      // Flag to indicate if a message is currently being sent
+const send = (
+  textAreaRef: ChatHookReturnType["textAreaRef"],
+  setChatState: ChatHookReturnType["setChatState"],
+  appendBotMessage: ChatHookReturnType["appendBotMessage"],
+  appendUserMessage: ChatHookReturnType["appendUserMessage"],
+  audioReceivedCallback: ChatProps["audioReceivedCallback"],
+  isLoadingMessage: boolean
 ) => {
   if (isLoadingMessage) {
-    // If a message is already being sent, do nothing
     return;
   }
 
@@ -56,84 +54,87 @@ const send = async (
 
   if (textAreaRef?.current && textInput) {
     if (textInput.length > MAX_CHARS) {
-      // If the message is too long, show an error message
-      setChatState((currentState) => ({
-        ...currentState,
-        errorMessage: `Please enter a message with ${MAX_CHARS} characters or less.`,
-      }));
+      setChatState((currentState) => {
+        return {
+          ...currentState,
+          errorMessage: `Please enter a message with ${MAX_CHARS} characters or less.`,
+        };
+      });
       return;
     }
 
     textAreaRef.current.clear();
     textAreaRef.current.focus();
 
-    // Get the last two messages to send to the backend
+    // Gets the last 2 messages to send to the backend.
     const allMessages = appendUserMessage(textInput);
     const messagesToSendToBackend = allMessages.slice(-2);
 
-    try {
-      // Send the messages to the backend, Sends a POST request to the backend.
-      await sendMessages(messagesToSendToBackend, setChatState, appendBotMessage, audioReceivedCallback);
-    } catch (error) {
-      console.error("Error sending messages:", error);
-    }
+    // Sends a POST request to the backend.
+    sendMessages(messagesToSendToBackend, setChatState, appendBotMessage, audioReceivedCallback);
   }
 };
 
-// Function to send messages to the backend
-const sendMessages = async (messagesToSendToBackend, setChatState, appendBotMessage, audioReceivedCallback) => {
-  // Set the loading state to indicate that a message is being sent
+const sendMessages = async (
+  messagesToSendToBackend: ChatMessage[],
+  setChatState: ChatHookReturnType["setChatState"],
+  appendBotMessage: ChatHookReturnType["appendBotMessage"],
+  audioReceivedCallback: ChatProps["audioReceivedCallback"]
+) => {
+  let errorMessage = "";
+
   setChatState((currentState) => ({
     ...currentState,
     isLoadingMessage: true,
   }));
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("CLEARING TIMEOUT");
+      controller.abort();
+    }, OPENAI_TIMEOUT_MILLISECONDS);
+
     const response = await fetch(CHAT_MESSAGES_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(messagesToSendToBackend.map((message) => ({ content: message.content, role: message.role })),
-      )
+      body: JSON.stringify(
+        messagesToSendToBackend.map((message) => {
+          return { content: message.content, role: message.role };
+        })
+      ),
+      signal: controller.signal,
     });
 
-
     // We have a response! Maybe it's an error, but not worries. We'll handle it below.
-    //clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      // If the response is not okay, handle the error
       const result = await response.json();
       throw new Error(result.error);
     }
 
     const jsonResponse = await response.json();
+
     // Response has 2 parts: text and audio.
-    // 1. Append the text response from the backend to the chat's scroll view.
+    // 1. Here, we append the text to the chat's scroll view.
     appendBotMessage({ content: jsonResponse.text, role: "assistant" });
 
-    // 2. Play the audio response (if available)
-    const audioContent = await jsonResponse.audio;
+    // 2. And here, we play the audio.
+    const audioContent = jsonResponse.audio;
     const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
     audioReceivedCallback(audio);
   } catch (error) {
-    console.error("Error in sendMessages:", error);
-    // Update the chat state with an error message
-    setChatState((currentState) => ({
-      ...currentState,
-      errorMessage: error.message || "Error: something went wrong.",
-    }));
-  } finally {
-    // Ensure the chat scrolls to the latest message
-    //messagesContainerRef.current?.scrollToEnd({ animated: true });
-
-    // Reset the loading state
-    setChatState((currentState) => ({
-      ...currentState,
-      isLoadingMessage: false,
-    }));
+    errorMessage = error.message || "Error: something went wrong.";
   }
+
+  setChatState((currentState) => ({
+    ...currentState,
+    errorMessage,
+    isLoadingMessage: false,
+  }));
 };
 
 // This component takes care of showing the messages in the chat's scroll view.
@@ -154,7 +155,7 @@ const PrintMessages = memo(({ messages }: { messages: ChatMessage[] }) => {
           >
             <Text
               fontWeight="600"
-            // color={isBot ? "$blue4Dark" : undefined}
+              // color={isBot ? "$blue4Dark" : undefined}
             >
               {" "}
               {lineIndex === 0 && (isBot ? "Bot:" : "You:")}
