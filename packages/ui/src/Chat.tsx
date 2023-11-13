@@ -1,4 +1,4 @@
-import { Send } from "@tamagui/lucide-icons";
+import { Mic, Send } from "@tamagui/lucide-icons";
 import { memo } from "react";
 import {
   Button,
@@ -12,12 +12,14 @@ import {
   useMedia,
 } from "tamagui";
 import { ChatErrors } from "./ChatErrors";
+import { recordAndTranscribe } from "./backendSpeechToText";
 import { ChatHookReturnType, useChat } from "./hooks";
 
 const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
 const alpha = "0.9";
 const scrollViewBackgroundColor = `rgba(255, 255, 255,${alpha})`;
+//const [isRecording, setIsRecording] = useState(false);
 export const MAX_CHARS = 300;
 
 export type ChatMessage = {
@@ -76,6 +78,48 @@ const send = async (
       await sendMessages(messagesToSendToBackend, setChatState, appendBotMessage, audioReceivedCallback);
     } catch (error) {
       console.error("Error sending messages:", error);
+    }
+  }
+};
+
+const sendFromMic = async (
+  textAreaRef: ChatHookReturnType["textAreaRef"],               // Reference to the text input field
+  setChatState: ChatHookReturnType["setChatState"],              // Function to update the chat state
+  appendBotMessage: ChatHookReturnType["appendBotMessage"],      // Function to add a bot message to the chat
+  appendUserMessage: ChatHookReturnType["appendUserMessage"],    // Function to add a user message to the chat
+  audioReceivedCallback: ChatProps["audioReceivedCallback"],     // Callback for receiving audio responses
+  isLoadingMessage: boolean                                      // Flag to indicate if a message is currently being sent
+) => {
+  if (isLoadingMessage) {
+    // If a message is already being sent, do nothing
+    return;
+  }
+
+  // Call the recordAndTranscribe function to get the transcribed text from the backend
+  const textInput = await recordAndTranscribe();
+
+  if (textAreaRef?.current && textInput) {
+    if (textInput.length > MAX_CHARS) {
+      // If the message is too long, show an error message
+      setChatState((currentState) => ({
+        ...currentState,
+        errorMessage: `Please give a  message with ${MAX_CHARS} characters or less.`,
+      }));
+      return;
+    }
+
+    textAreaRef.current.clear();
+    textAreaRef.current.focus();
+
+    // Get the last two messages to send to the backend
+    const allMessages = appendUserMessage(textInput);
+    const messagesToSendToBackend = allMessages.slice(-2);
+
+    try {
+      // Send the messages to the backend, Sends a POST request to the backend.
+      await sendMessages(messagesToSendToBackend, setChatState, appendBotMessage, audioReceivedCallback);
+    } catch (error) {
+      console.error("Error sending message from mic:", error);
     }
   }
 };
@@ -255,7 +299,6 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
           maxLength={MAX_CHARS}
           onChangeText={(text: string) => setChatState({ ...chatState, charCount: text.length })}
         />
-
         {isLoadingMessage ? (
           <Spinner
             height={buttonSize}
@@ -269,22 +312,44 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
             br="100%"
           />
         ) : (
-          <Button
-            size={buttonSize}
-            ml={buttonMarginLeft}
-            icon={<Send size="$1" />}
-            br="100%"
-            onPress={() =>
-              send(
-                textAreaRef,
-                setChatState,
-                appendBotMessage,
-                appendUserMessage,
-                audioReceivedCallback,
-                isLoadingMessage
-              )
-            }
-          />
+          <>
+            <Button
+              size={buttonSize}
+              ml={buttonMarginLeft}
+              icon={<Send size="$1" />}
+              br="100%"
+              onPress={() =>
+                send(
+                  textAreaRef,
+                  setChatState,
+                  appendBotMessage,
+                  appendUserMessage,
+                  audioReceivedCallback,
+                  isLoadingMessage
+                )
+              }
+            />
+
+
+            <Button
+              size={buttonSize}
+              ml={buttonMarginLeft}
+              icon={<Mic size="$1" />}
+              br="100%"
+              onPress={() =>
+                //setIsRecording(!isRecording)
+                sendFromMic(
+                  textAreaRef,
+                  setChatState,
+                  appendBotMessage,
+                  appendUserMessage,
+                  audioReceivedCallback,
+                  isLoadingMessage
+                )
+              }
+            />
+
+          </>
         )}
       </XStack>
       <ChatErrors errorMessage={chatState.errorMessage} charCount={chatState.charCount} />
