@@ -1,4 +1,4 @@
-import { Mic, Send, StopCircle } from "@tamagui/lucide-icons";
+import { Mic, Send } from "@tamagui/lucide-icons";
 import { memo, useState } from "react";
 import {
   Button,
@@ -19,6 +19,8 @@ const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
 const alpha = "0.9";
 const scrollViewBackgroundColor = `rgba(255, 255, 255,${alpha})`;
+const [isRecording, setIsRecording] = useState(false);
+const [buttonColor, setButtonColor] = useState("default");
 export const MAX_CHARS = 300;
 
 export type ChatMessage = {
@@ -81,13 +83,14 @@ const send = async (
   }
 };
 
-const RecordingButton = async (
+const sendFromMic = async (
   textAreaRef: ChatHookReturnType["textAreaRef"],               // Reference to the text input field
   setChatState: ChatHookReturnType["setChatState"],              // Function to update the chat state
   appendBotMessage: ChatHookReturnType["appendBotMessage"],      // Function to add a bot message to the chat
   appendUserMessage: ChatHookReturnType["appendUserMessage"],    // Function to add a user message to the chat
   audioReceivedCallback: ChatProps["audioReceivedCallback"],     // Callback for receiving audio responses
-  isLoadingMessage: boolean                                      // Flag to indicate if a message is currently being sent
+  isLoadingMessage: boolean,
+  //inputText: string                                      // Flag to indicate if a message is currently being sent
 ) => {
   if (isLoadingMessage) {
     // If a message is already being sent, do nothing
@@ -96,7 +99,8 @@ const RecordingButton = async (
 
   // Call the recordAndTranscribe function to get the transcribed text from the backend
   const textInput = await recordAndTranscribe();
-
+  //const inputText = 'Hello'
+  //const textInput = inputText
   if (textAreaRef?.current && textInput) {
     if (textInput.length > MAX_CHARS) {
       // If the message is too long, show an error message
@@ -221,8 +225,9 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
     appendUserMessage,
   } = useChat();
   const media = useMedia();
+
   const { isLoadingMessage } = chatState;
-  const [isRecording, setIsRecording] = useState(false);
+
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
   const smallMessagesBoxHeight = 170;
@@ -230,23 +235,8 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const textAreaHeight = 60;
   const buttonMarginLeft = 8;
   const buttonSize = 50;
-  const isSmall = media.xs;
-  const handleButtonPress = async () => {
-    setIsRecording(true);
-    RecordingButton(
-      textAreaRef,
-      setChatState,
-      appendBotMessage,
-      appendUserMessage,
-      audioReceivedCallback,
-      isLoadingMessage
-    );
-    setIsRecording(false);
-  };
-  const handleButtonRelease = () => {
-    setIsRecording(false);
-  };
 
+  const isSmall = media.xs;
 
   return (
     <YStack
@@ -343,16 +333,24 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
               }
             />
 
+
             <Button
               size={buttonSize}
               ml={buttonMarginLeft}
-              //icon={<Mic size="$1" />}
-              icon={isRecording ? <StopCircle size="$1" /> : <Mic size="$1" />}
+              icon={<Mic size="$1" />}
               br="100%"
-              onPress={handleButtonPress}
-
+              onPress={() => {
+                sendFromMic(
+                  textAreaRef,
+                  setChatState,
+                  appendBotMessage,
+                  appendUserMessage,
+                  audioReceivedCallback,
+                  isLoadingMessage
+                )
+              }
+              }
             />
-
           </>
         )}
       </XStack>

@@ -1,4 +1,4 @@
-import { Mic, Send, StopCircle } from "@tamagui/lucide-icons";
+import { Mic, Send } from "@tamagui/lucide-icons";
 import { memo, useState } from "react";
 import {
   Button,
@@ -19,6 +19,7 @@ const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
 const alpha = "0.9";
 const scrollViewBackgroundColor = `rgba(255, 255, 255,${alpha})`;
+const [isRecording, setIsRecording] = useState(false);
 export const MAX_CHARS = 300;
 
 export type ChatMessage = {
@@ -93,7 +94,6 @@ const RecordingButton = async (
     // If a message is already being sent, do nothing
     return;
   }
-
   // Call the recordAndTranscribe function to get the transcribed text from the backend
   const textInput = await recordAndTranscribe();
 
@@ -221,8 +221,9 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
     appendUserMessage,
   } = useChat();
   const media = useMedia();
+
   const { isLoadingMessage } = chatState;
-  const [isRecording, setIsRecording] = useState(false);
+
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
   const smallMessagesBoxHeight = 170;
@@ -230,9 +231,11 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const textAreaHeight = 60;
   const buttonMarginLeft = 8;
   const buttonSize = 50;
+
   const isSmall = media.xs;
+
   const handleButtonPress = async () => {
-    setIsRecording(true);
+    //setIsRecording(!isRecording);
     RecordingButton(
       textAreaRef,
       setChatState,
@@ -241,13 +244,8 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
       audioReceivedCallback,
       isLoadingMessage
     );
-    setIsRecording(false);
+    //setIsRecording(false);
   };
-  const handleButtonRelease = () => {
-    setIsRecording(false);
-  };
-
-
   return (
     <YStack
       ai="center"
@@ -343,14 +341,26 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
               }
             />
 
+
             <Button
               size={buttonSize}
               ml={buttonMarginLeft}
-              //icon={<Mic size="$1" />}
-              icon={isRecording ? <StopCircle size="$1" /> : <Mic size="$1" />}
+              icon={<Mic size="$1" />}
               br="100%"
-              onPress={handleButtonPress}
-
+              //onPress={handleButtonPress}
+              onPress={() => {
+                //setIsRecording(!isRecording);
+                RecordingButton(
+                  textAreaRef,
+                  setChatState,
+                  appendBotMessage,
+                  appendUserMessage,
+                  audioReceivedCallback,
+                  isLoadingMessage
+                )
+                //setIsRecording(false);
+              }
+              }
             />
 
           </>
