@@ -12,8 +12,8 @@ import {
   useMedia,
 } from "tamagui";
 import { ChatErrors } from "./ChatErrors";
-import { recordAndTranscribe } from "./backendSpeechToText";
 import { ChatHookReturnType, useChat } from "./hooks";
+import { recordAndTranscribe } from "./speechToText";
 
 const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
@@ -223,6 +223,9 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const media = useMedia();
   const { isLoadingMessage } = chatState;
   const [isRecording, setIsRecording] = useState(false);
+  const [micIcon, setMicIcon] = useState(<Mic size="$1" />);
+  const [audioRecorder, setAudioRecorder] = useState(null);
+
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
   const smallMessagesBoxHeight = 170;
@@ -232,16 +235,36 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const buttonSize = 50;
   const isSmall = media.xs;
   const handleButtonPress = async () => {
-    setIsRecording(true);
-    RecordingButton(
-      textAreaRef,
-      setChatState,
-      appendBotMessage,
-      appendUserMessage,
-      audioReceivedCallback,
-      isLoadingMessage
-    );
-    setIsRecording(false);
+    if (isRecording) {
+      // Stop recording
+      setIsRecording(false);
+      //audioRecorder.stop();
+      //audioReceivedCallback(audioRecorder.getAudio());
+      // Change the icon back to Mic
+      setMicIcon(<Mic size="$1" />);
+
+      RecordingButton(
+        textAreaRef,
+        setChatState,
+        appendBotMessage,
+        appendUserMessage,
+        audioReceivedCallback,
+        isLoadingMessage
+      );
+
+
+
+    } else {
+      // Start recording
+      setIsRecording(true);
+      // Change the icon to StopCircle
+      setMicIcon(<StopCircle size="$1" />);
+      // Create a new AudioRecorder
+      //const newAudioRecorder = new AudioRecorder();
+      //setAudioRecorder(newAudioRecorder);
+      //newAudioRecorder.start();
+    }
+
   };
   const handleButtonRelease = () => {
     setIsRecording(false);
@@ -347,7 +370,8 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
               size={buttonSize}
               ml={buttonMarginLeft}
               //icon={<Mic size="$1" />}
-              icon={isRecording ? <StopCircle size="$1" /> : <Mic size="$1" />}
+              //icon={isRecording ? <StopCircle size="$1" /> : <Mic size="$1" />}
+              icon={micIcon}
               br="100%"
               onPress={handleButtonPress}
 
