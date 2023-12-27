@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.18.9",
+    "@google-cloud/translate": "^8.0.2",
     "@manypkg/cli": "^0.19.1",
     "eslint": "^8.21.0",
     "openai": "^4.12.1",
