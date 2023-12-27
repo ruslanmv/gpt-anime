@@ -15,15 +15,11 @@ import { ChatErrors } from "./ChatErrors";
 import { ChatHookReturnType, useChat } from "./hooks";
 import { recordAndTranscribe } from "./speechToText";
 //import { recordAndTranscribe } from "next-app/speechToText"; // Replace with your actual apps/next package name
-
-
-
 const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
 const alpha = "0.9";
 const scrollViewBackgroundColor = `rgba(255, 255, 255,${alpha})`;
 export const MAX_CHARS = 300;
-
 export type ChatMessage = {
   role: "user" | "system" | "assistant";
   content: string;
@@ -90,7 +86,9 @@ const RecordingButton = async (
   appendBotMessage: ChatHookReturnType["appendBotMessage"],      // Function to add a bot message to the chat
   appendUserMessage: ChatHookReturnType["appendUserMessage"],    // Function to add a user message to the chat
   audioReceivedCallback: ChatProps["audioReceivedCallback"],     // Callback for receiving audio responses
-  isLoadingMessage: boolean                                      // Flag to indicate if a message is currently being sent
+  isLoadingMessage: boolean,                                      // Flag to indicate if a message is currently being sent,
+  setMicIcon: React.Dispatch<React.SetStateAction<React.ReactNode>>, // Add this parameter
+  setIsRecording: React.Dispatch<React.SetStateAction<React.ReactNode>> // Add this parameter
 ) => {
   if (isLoadingMessage) {
     // If a message is already being sent, do nothing
@@ -99,7 +97,8 @@ const RecordingButton = async (
 
   // Call the recordAndTranscribe function to get the transcribed text from the backend
   const textInput = await recordAndTranscribe();
-
+  setMicIcon(<Mic size="$1" />);
+  setIsRecording(false);
   if (textAreaRef?.current && textInput) {
     if (textInput.length > MAX_CHARS) {
       // If the message is too long, show an error message
@@ -227,7 +226,6 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const { isLoadingMessage } = chatState;
   const [isRecording, setIsRecording] = useState(false);
   const [micIcon, setMicIcon] = useState(<Mic size="$1" />);
-  const [audioRecorder, setAudioRecorder] = useState(null);
 
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
@@ -241,38 +239,36 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
     if (isRecording) {
       // Stop recording
       setIsRecording(false);
-      //audioRecorder.stop();
-      //audioReceivedCallback(audioRecorder.getAudio());
       // Change the icon back to Mic
       setMicIcon(<Mic size="$1" />);
-
-      RecordingButton(
+      await RecordingButton(
         textAreaRef,
         setChatState,
         appendBotMessage,
         appendUserMessage,
         audioReceivedCallback,
-        isLoadingMessage
+        isLoadingMessage,
+        setMicIcon,
+        setIsRecording
+
       );
-
-
-
     } else {
       // Start recording
       setIsRecording(true);
       // Change the icon to StopCircle
       setMicIcon(<StopCircle size="$1" />);
-      // Create a new AudioRecorder
-      //const newAudioRecorder = new AudioRecorder();
-      //setAudioRecorder(newAudioRecorder);
-      //newAudioRecorder.start();
+      await RecordingButton(
+        textAreaRef,
+        setChatState,
+        appendBotMessage,
+        appendUserMessage,
+        audioReceivedCallback,
+        isLoadingMessage,
+        setMicIcon,
+        setIsRecording
+      );
     }
-
   };
-  const handleButtonRelease = () => {
-    setIsRecording(false);
-  };
-
 
   return (
     <YStack
