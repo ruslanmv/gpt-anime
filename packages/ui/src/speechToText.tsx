@@ -1,4 +1,3 @@
-
 export class AudioRecorder {
   private recorder: MediaRecorder;
   private audioChunks: Blob[];
@@ -91,16 +90,14 @@ const audioBlobToBase64 = (blob) => {
   });
 };
 
-// Function to convert audio blob to text
+
 async function speechToText(audioBlob) {
   return new Promise(async (resolve, reject) => {
+    //    if (!process.env.GOOGLE_API_KEY) { throw new Error("GOOGLE_API_KEY not found in theprocess.env environment"); }
+    //    const apiKey = process.env.GOOGLE_API_KEY;
 
-
-    if (!process.env.GOOGLE_API_KEY) {
-      throw new Error("GOOGLE_API_KEY not found in theprocess.env environment");
-    }
-
-    const apiKey = process.env.GOOGLE_API_KEY;
+    if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) { throw new Error("GOOGLE_API_KEY not found in theprocess.env environment"); }
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
     try {
       const base64Audio = await audioBlobToBase64(audioBlob);

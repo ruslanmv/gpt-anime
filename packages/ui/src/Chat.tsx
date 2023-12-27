@@ -14,6 +14,9 @@ import {
 import { ChatErrors } from "./ChatErrors";
 import { ChatHookReturnType, useChat } from "./hooks";
 import { recordAndTranscribe } from "./speechToText";
+//import { recordAndTranscribe } from "next-app/speechToText"; // Replace with your actual apps/next package name
+
+
 
 const OPENAI_TIMEOUT_MILLISECONDS = 5_000;
 const CHAT_MESSAGES_URL = "/api/chat";
