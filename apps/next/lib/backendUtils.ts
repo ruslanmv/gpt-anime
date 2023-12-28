@@ -223,7 +223,7 @@ async function detectLanguage(text: string): Promise<string> {
 }
 
 // Modified synthesizeSpeechMulti function
-export async function synthesizeSpeechMulti(text: string): Promise<string> {
+export async function synthesizeSpeechMulti(text: string): Promise<{ audioContent: string, language: string }> {
   if (!process.env.GOOGLE_API_KEY) {
     throw new Error("GOOGLE_API_KEY not found in the environment");
   }
@@ -303,5 +303,5 @@ export async function synthesizeSpeechMulti(text: string): Promise<string> {
   const responseData = await response.json();
   const audioContent = responseData.audioContent;
 
-  return audioContent;
+  return { audioContent, language };
 }

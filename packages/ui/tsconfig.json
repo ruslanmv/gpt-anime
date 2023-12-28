@@ -1,12 +1,21 @@
 {
   "extends": "../../tsconfig.base",
   "include": [
-    "src"
+    "src",
+    // Other include paths...
+    "packages/**/*"
   ],
   "compilerOptions": {
     "composite": true,
     "esModuleInterop": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    // Other compiler options...
+    "baseUrl": ".",
+    "paths": {
+      "@my/ui/types/*": [
+        "packages/ui/types/*"
+      ]
+    }
   },
   "references": []
 }

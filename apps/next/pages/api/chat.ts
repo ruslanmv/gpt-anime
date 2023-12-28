@@ -75,6 +75,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   let aiResponse = "";
   let audioContent = "";
+  let language = "";
 
   try {
     const response = await OpenAI(payload);
@@ -93,7 +94,9 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     // Convert aiResponse to audio
-    audioContent = await synthesizeSpeechMulti(aiResponse);
+    const result = await synthesizeSpeechMulti(aiResponse);
+    audioContent = result.audioContent;
+    language = result.language;
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: "Error fetching audio." }), {
@@ -105,6 +108,7 @@ export default async function handler(req: Request): Promise<Response> {
   const jsonResponse = {
     text: aiResponse,
     audio: audioContent,
+    language: language
   };
 
   if (process.env.NODE_ENV === "development") {

@@ -30,7 +30,7 @@ export class AudioRecorder {
   }
 }
 
-export async function recordAndTranscribe(): Promise<string> {
+export async function recordAndTranscribe(language: string): Promise<string> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const audioRecorder = new AudioRecorder(stream);
 
@@ -47,7 +47,7 @@ export async function recordAndTranscribe(): Promise<string> {
         const audio = new Audio(audioURL);
         //audio.play();
 
-        const transcription = await speechToText(audioBlob);
+        const transcription = await speechToTextMulti(audioBlob, language);
         if (typeof transcription === 'string') {
           resolve(transcription);
         } else {
@@ -93,9 +93,6 @@ const audioBlobToBase64 = (blob) => {
 
 async function speechToText(audioBlob) {
   return new Promise(async (resolve, reject) => {
-    //    if (!process.env.GOOGLE_API_KEY) { throw new Error("GOOGLE_API_KEY not found in theprocess.env environment"); }
-    //    const apiKey = process.env.GOOGLE_API_KEY;
-
     if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) { throw new Error("GOOGLE_API_KEY not found in theprocess.env environment"); }
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
@@ -132,6 +129,67 @@ async function speechToText(audioBlob) {
       const elapsedTime = endTime - startTime;
 
       // console.log('API response:', data);
+      console.log('Voice Recognition - Time taken (ms):', elapsedTime);
+
+      if (data.results && data.results.length > 0) {
+        const transcription = data.results[0].alternatives[0].transcript;
+        resolve(transcription);
+      } else {
+        reject('No transcription available');
+      }
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+async function speechToTextMulti(audioBlob, language) {
+  return new Promise(async (resolve, reject) => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) {
+      throw new Error("GOOGLE_API_KEY not found in the process.env environment");
+    }
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+    console.log('Current State Language for Speech to Text  :', language);
+    const languageCodeMapping = {
+      english: "en-US",
+      spanish: "es-ES",
+      italian: "it-IT",
+      russian: "ru-RU",
+      german: "de-DE",
+      japanese: "ja-JP",
+    };
+    const languageCode = languageCodeMapping[language] || "en-US";
+
+    try {
+      const base64Audio = await audioBlobToBase64(audioBlob);
+      const startTime = performance.now();
+
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          config: {
+            encoding: 'WEBM_OPUS',
+            sampleRateHertz: 48000,
+            languageCode: languageCode,
+          },
+          audio: {
+            content: base64Audio,
+          },
+        }),
+      };
+
+      const response = await fetch(
+        `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+        requestOptions
+      );
+
+      const data = await response.json();
+      const endTime = performance.now();
+      const elapsedTime = endTime - startTime;
+
       console.log('Voice Recognition - Time taken (ms):', elapsedTime);
 
       if (data.results && data.results.length > 0) {

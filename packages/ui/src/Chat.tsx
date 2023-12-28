@@ -34,7 +34,6 @@ export type ChatServerResponse =
 type ChatProps = StackPropsBase & {
   audioReceivedCallback: (audio: HTMLAudioElement | null) => void;
 };
-
 // This function is called when a user wants to send a message to the backend. It does the following:
 // 1. Appends the user's message to the existing messages array. This shows the message in the chat's scroll view.
 // 2. Sends a POST request to the backend and waits for the server side events.
@@ -79,6 +78,8 @@ const send = async (
     }
   }
 };
+//const [Language, setLanguage] = useState("english");
+
 
 const RecordingButton = async (
   textAreaRef: ChatHookReturnType["textAreaRef"],               // Reference to the text input field
@@ -88,15 +89,20 @@ const RecordingButton = async (
   audioReceivedCallback: ChatProps["audioReceivedCallback"],     // Callback for receiving audio responses
   isLoadingMessage: boolean,                                      // Flag to indicate if a message is currently being sent,
   setMicIcon: React.Dispatch<React.SetStateAction<React.ReactNode>>, // Add this parameter
-  setIsRecording: React.Dispatch<React.SetStateAction<React.ReactNode>> // Add this parameter
+  setIsRecording: React.Dispatch<React.SetStateAction<React.ReactNode>>, // Add this parameter
+  setLanguage: React.Dispatch<React.SetStateAction<string>>  // Add this parameter
 ) => {
   if (isLoadingMessage) {
     // If a message is already being sent, do nothing
     return;
   }
 
+
+  // We got the current language from the state setLanguage
   // Call the recordAndTranscribe function to get the transcribed text from the backend
-  const textInput = await recordAndTranscribe();
+  const textInput = await recordAndTranscribe("english");
+
+
   setMicIcon(<Mic size="$1" />);
   setIsRecording(false);
   if (textAreaRef?.current && textInput) {
@@ -154,7 +160,7 @@ const sendMessages = async (messagesToSendToBackend, setChatState, appendBotMess
     }
 
     const jsonResponse = await response.json();
-    // Response has 2 parts: text and audio.
+    // Response has 3 parts: text , audio and language
     // 1. Append the text response from the backend to the chat's scroll view.
     appendBotMessage({ content: jsonResponse.text, role: "assistant" });
 
@@ -162,6 +168,11 @@ const sendMessages = async (messagesToSendToBackend, setChatState, appendBotMess
     const audioContent = await jsonResponse.audio;
     const audio = new Audio(`data:audio/mpeg;base64,${audioContent}`);
     audioReceivedCallback(audio);
+
+    // 3. We got the language and update the current state to this language
+    const currentLanguage = await jsonResponse.language;
+    //setLanguage(language)
+
   } catch (error) {
     console.error("Error in sendMessages:", error);
     // Update the chat state with an error message
@@ -226,6 +237,7 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const { isLoadingMessage } = chatState;
   const [isRecording, setIsRecording] = useState(false);
   const [micIcon, setMicIcon] = useState(<Mic size="$1" />);
+  const [Language, setLanguage] = useState("english");
 
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
@@ -249,7 +261,8 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
         audioReceivedCallback,
         isLoadingMessage,
         setMicIcon,
-        setIsRecording
+        setIsRecording,
+        setLanguage
 
       );
     } else {
@@ -265,7 +278,8 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
         audioReceivedCallback,
         isLoadingMessage,
         setMicIcon,
-        setIsRecording
+        setIsRecording,
+        setLanguage
       );
     }
   };
