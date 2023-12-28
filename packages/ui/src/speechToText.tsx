@@ -45,7 +45,7 @@ export async function recordAndTranscribe(): Promise<string> {
         // Play the recorded sound
         const audioURL = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioURL);
-        audio.play();
+        //audio.play();
 
         const transcription = await speechToText(audioBlob);
         if (typeof transcription === 'string') {

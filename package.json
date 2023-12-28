@@ -31,6 +31,7 @@
     "@google-cloud/translate": "^8.0.2",
     "@manypkg/cli": "^0.19.1",
     "eslint": "^8.21.0",
+    "franc": "^6.1.0",
     "openai": "^4.12.1",
     "prettier": "^2.7.1",
     "turbo": "^1.4.2",

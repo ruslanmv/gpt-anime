@@ -1,5 +1,5 @@
 import { ChatMessage } from "@my/ui/types/Chat";
-import { OpenAI, OpenAIPayload, synthesizeSpeech } from "lib/backendUtils";
+import { OpenAI, OpenAIPayload, synthesizeSpeechMulti } from "lib/backendUtils";
 import { dummyBotAudio, dummyBotMessages } from "lib/dummyResponses";
 
 const MAX_REQUEST_BODY_LENGTH = 1200;
@@ -93,7 +93,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     // Convert aiResponse to audio
-    audioContent = await synthesizeSpeech(aiResponse);
+    audioContent = await synthesizeSpeechMulti(aiResponse);
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: "Error fetching audio." }), {

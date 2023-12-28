@@ -187,3 +187,121 @@ export async function synthesizeSpeech(text: string): Promise<string> {
 
   return audioContent;
 }
+
+import { franc } from 'franc';
+// Language Detector Function
+async function detectLanguage(text: string): Promise<string> {
+  const supportedLanguages: Record<string, string> = {
+    eng: 'english',
+    spa: 'spanish',
+    ita: 'italian',
+    rus: 'russian',
+    deu: 'german',
+    jpn: 'japanese',
+  };
+
+  // For simplicity, let's assume the language is determined based on the first character of the text
+  const firstChar = text.charAt(0);
+
+  if (/[áéíóúñ]/.test(firstChar)) {
+    return "spanish";
+  } else if (/[àèìòù]/.test(firstChar)) {
+    return "italian";
+  } else if (/[дйцукенгшщзхъё]/.test(firstChar)) {
+    return "russian";
+  } else if (/[äöüß]/.test(firstChar)) {
+    return "german";
+  } else if (/[あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん]/.test(firstChar)) {
+    return "japanese";
+  } else {
+    const detectedLanguageCode: string = franc(text);
+    console.log('detected language code :', detectedLanguageCode);
+    const detectedLanguage: string = supportedLanguages[detectedLanguageCode] || 'english';
+    console.log('detected language :', detectedLanguage);
+    return detectedLanguage;
+  }
+}
+
+// Modified synthesizeSpeechMulti function
+export async function synthesizeSpeechMulti(text: string): Promise<string> {
+  if (!process.env.GOOGLE_API_KEY) {
+    throw new Error("GOOGLE_API_KEY not found in the environment");
+  }
+  if (typeof text !== "string") {
+    throw new Error(`Invalid input type: ${typeof text}. Type has to be text or SSML.`);
+  }
+  const language = await detectLanguage(text);
+
+  let languageCode;
+  let voiceName;
+  let ssmlGender;
+  //https://cloud.google.com/text-to-speech/docs/voices
+  switch (language) {
+    case "english":
+      languageCode = "en-US";
+      voiceName = "en-US-Neural2-H";
+      ssmlGender = "FEMALE";
+      break;
+    case "spanish":
+      languageCode = "es-US";
+      voiceName = "es-US-Neural2-A";
+      ssmlGender = "FEMALE";
+      break;
+    case "italian":
+      languageCode = "it-IT";
+      voiceName = "it-IT-Neural2-A";
+      ssmlGender = "FEMALE";
+      break;
+    case "russian":
+      languageCode = "ru-RU";
+      voiceName = "ru-RU-Standard-C";
+      ssmlGender = "FEMALE";
+      break;
+    case "german":
+      languageCode = "de-DE";
+      voiceName = "de-DE-Neural2-F";
+      ssmlGender = "FEMALE";
+      break;
+    case "japanese":
+      languageCode = "ja-JP";
+      voiceName = "ja-JP-Neural2-B";
+      ssmlGender = "FEMALE";
+      break;
+    default:
+      throw new Error(`Unsupported language: ${language}`);
+  }
+
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const apiURL = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+  const requestBody = {
+    input: {
+      text,
+    },
+    voice: {
+      languageCode,
+      name: voiceName,
+      ssmlGender,
+    },
+    audioConfig: {
+      audioEncoding: "MP3",
+    },
+  };
+
+  const response = await fetch(apiURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Google Cloud TTS API Error: ${errorData.error.message}`);
+  }
+
+  const responseData = await response.json();
+  const audioContent = responseData.audioContent;
+
+  return audioContent;
+}

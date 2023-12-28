@@ -7243,6 +7243,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"collapse-white-space@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "collapse-white-space@npm:2.1.0"
+  checksum: c8978b1f4e7d68bf846cfdba6c6689ce8910511df7d331eb6e6757e51ceffb52768d59a28db26186c91dcf9594955b59be9f8ccd473c485790f5d8b90dc6726f
+  languageName: node
+  linkType: hard
+
 "collect-v8-coverage@npm:^1.0.0":
   version: 1.0.1
   resolution: "collect-v8-coverage@npm:1.0.1"
@@ -10067,6 +10074,15 @@ __metadata:
   dependencies:
     map-cache: ^0.2.2
   checksum: 1cbbd0b0116b67d5790175de0038a11df23c1cd2e8dcdbade58ebba5594c2d641dade6b4f126d82a7b4a6ffc2ea12e3d387dbb64ea2ae97cf02847d436f60fdc
+  languageName: node
+  linkType: hard
+
+"franc@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "franc@npm:6.1.0"
+  dependencies:
+    trigram-utils: ^2.0.0
+  checksum: 33ba2ca48eb9e729d4323862d8de097a388751e2efc46ce233396eb8773a115584ceadcf9e5a33d98c3850879b2b2e959413984c966f41641ac4fd7b0bf40dbf
   languageName: node
   linkType: hard
 
@@ -13745,6 +13761,7 @@ __metadata:
     "@google-cloud/translate": ^8.0.2
     "@manypkg/cli": ^0.19.1
     eslint: ^8.21.0
+    franc: ^6.1.0
     openai: ^4.12.1
     prettier: ^2.7.1
     turbo: ^1.4.2
@@ -13760,6 +13777,13 @@ __metadata:
     object-assign: ^4.0.1
     thenify-all: ^1.0.0
   checksum: 8427de0ece99a07e9faed3c0c6778820d7543e3776f9a84d22cf0ec0a8eb65f6e9aee9c9d353ff9a105ff62d33a9463c6ca638974cc652ee8140cd1e35951c87
+  languageName: node
+  linkType: hard
+
+"n-gram@npm:^2.0.0":
+  version: 2.0.2
+  resolution: "n-gram@npm:2.0.2"
+  checksum: 1acaf1558728a37f357b898c1980b1e8a7abad2545faa74d739dcfff1c786274943a42f2e85d9bcf0a88fc6c93b687387f99547422ac0c0db18033f3066edd9d
   languageName: node
   linkType: hard
 
@@ -17470,6 +17494,16 @@ __metadata:
   version: 0.6.7
   resolution: "traverse@npm:0.6.7"
   checksum: 21018085ab72f717991597e12e2b52446962ed59df591502e4d7e1a709bc0a989f7c3d451aa7d882666ad0634f1546d696c5edecda1f2fc228777df7bb529a1e
+  languageName: node
+  linkType: hard
+
+"trigram-utils@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "trigram-utils@npm:2.0.1"
+  dependencies:
+    collapse-white-space: ^2.0.0
+    n-gram: ^2.0.0
+  checksum: 0233cbd1eb6ae4f56a56a76cd8a210201005b6bbf75298f00370d6f8bf87d4b2c4a53f720e1859d7ab5d549ea479928d4e84dc406292db89b19b94ddd4e1144f
   languageName: node
   linkType: hard
 
