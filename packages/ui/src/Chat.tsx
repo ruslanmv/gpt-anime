@@ -99,6 +99,8 @@ const RecordingButton = async (
 
 
   // We got the current language from the state setLanguage
+  console.log(' language to recognize :', currentLanguage);
+
   // Call the recordAndTranscribe function to get the transcribed text from the backend
   const textInput = await recordAndTranscribe(currentLanguage);
 
@@ -171,6 +173,8 @@ const sendMessages = async (messagesToSendToBackend, setChatState, appendBotMess
 
     // 3. We got the language and update the current state to this language
     const newLanguage = await jsonResponse.language;
+    console.log(' language retrieved :', newLanguage);
+
     // Adding the new language to the chat state
     setChatState((currentState) => ({
       ...currentState,

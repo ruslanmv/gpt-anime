@@ -49,3 +49,4 @@ website/*
 
 /backup
 packages/ui/src/apps/next/lib/backup/
+BLOG.md
