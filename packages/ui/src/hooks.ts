@@ -21,6 +21,7 @@ export type ChatHookState = {
   isLoadingMessage: boolean;
   errorMessage: string;
   charCount: number;
+  language: string; // Add the language parameter to the state
 };
 
 export type ChatHookReturnType = {
@@ -40,6 +41,7 @@ export const useChat = (): ChatHookReturnType => {
     errorMessage: "",
     messages: dummyMessages,
     isLoadingMessage: false,
+    language: "english", // Set the initial language to "english"
   });
 
   // Appends message from the bot to the messages state array. This will update the chat's text area.

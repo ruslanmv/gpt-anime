@@ -90,7 +90,7 @@ const RecordingButton = async (
   isLoadingMessage: boolean,                                      // Flag to indicate if a message is currently being sent,
   setMicIcon: React.Dispatch<React.SetStateAction<React.ReactNode>>, // Add this parameter
   setIsRecording: React.Dispatch<React.SetStateAction<React.ReactNode>>, // Add this parameter
-  setLanguage: React.Dispatch<React.SetStateAction<string>>  // Add this parameter
+  currentLanguage: string  // Add this parameter
 ) => {
   if (isLoadingMessage) {
     // If a message is already being sent, do nothing
@@ -100,7 +100,7 @@ const RecordingButton = async (
 
   // We got the current language from the state setLanguage
   // Call the recordAndTranscribe function to get the transcribed text from the backend
-  const textInput = await recordAndTranscribe("english");
+  const textInput = await recordAndTranscribe(currentLanguage);
 
 
   setMicIcon(<Mic size="$1" />);
@@ -170,8 +170,12 @@ const sendMessages = async (messagesToSendToBackend, setChatState, appendBotMess
     audioReceivedCallback(audio);
 
     // 3. We got the language and update the current state to this language
-    const currentLanguage = await jsonResponse.language;
-    //setLanguage(language)
+    const newLanguage = await jsonResponse.language;
+    // Adding the new language to the chat state
+    setChatState((currentState) => ({
+      ...currentState,
+      language: newLanguage,
+    }));
 
   } catch (error) {
     console.error("Error in sendMessages:", error);
@@ -237,7 +241,6 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const { isLoadingMessage } = chatState;
   const [isRecording, setIsRecording] = useState(false);
   const [micIcon, setMicIcon] = useState(<Mic size="$1" />);
-  const [Language, setLanguage] = useState("english");
 
   // Constant numbers:
   const regularMessagesBoxHeight = 300;
@@ -248,11 +251,14 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
   const buttonSize = 50;
   const isSmall = media.xs;
   const handleButtonPress = async () => {
+    //const { chatState } = useChat();
+    const language = chatState.language;
     if (isRecording) {
       // Stop recording
       setIsRecording(false);
       // Change the icon back to Mic
       setMicIcon(<Mic size="$1" />);
+
       await RecordingButton(
         textAreaRef,
         setChatState,
@@ -262,7 +268,7 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
         isLoadingMessage,
         setMicIcon,
         setIsRecording,
-        setLanguage
+        language
 
       );
     } else {
@@ -279,7 +285,7 @@ export const Chat = ({ audioReceivedCallback, ...stackProps }: ChatProps) => {
         isLoadingMessage,
         setMicIcon,
         setIsRecording,
-        setLanguage
+        language
       );
     }
   };
