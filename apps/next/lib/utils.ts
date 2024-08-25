@@ -1,3 +1,6 @@
+import { models } from "./constants";
+import { speechRecognitionLanguages } from "./speechRecognitionLanguages";
+
 export function isWebview(): boolean {
   if (typeof window === undefined) {
     return false;
@@ -5,7 +8,7 @@ export function isWebview(): boolean {
 
   let navigator = window.navigator;
 
-  const standalone = navigator.standalone;
+  const standalone = (navigator as any).standalone;
   const userAgent = navigator.userAgent.toLowerCase();
   const safari = /safari/.test(userAgent);
   const ios = /iphone|ipod|ipad|macintosh/.test(userAgent);
@@ -20,4 +23,28 @@ export function isBabylonInspectorShowing() {
     typeof window !== "undefined" &&
     document.getElementById("sceneExplorer")
   );
+}
+
+export const isModelValid = (model: string | null): boolean => {
+  if (!model) {
+    return false;
+  }
+
+  if (!Object.keys(models).includes(model)) {
+    return false;
+  }
+
+  return true;
+};
+
+export const isSpeechLangCodeValid = (languageCode: string | null): boolean => {
+  if (!languageCode) {
+    return false;
+  }
+
+  if (!Object.keys(speechRecognitionLanguages).includes(languageCode)) {
+    return false;
+  }
+
+  return true;
 }

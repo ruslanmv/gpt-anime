@@ -28,8 +28,12 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.18.9",
+    "@babylonjs/core": "^6.19.1",
+    "@babylonjs/loaders": "^6.19.1",
     "@google-cloud/translate": "^8.0.2",
     "@manypkg/cli": "^0.19.1",
+    "babylonjs": "^6.19.1",
+    "babylonjs-loaders": "^6.19.1",
     "eslint": "^8.21.0",
     "franc": "^6.1.0",
     "openai": "^4.12.1",

@@ -1667,6 +1667,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babylonjs/core@npm:^6.19.1":
+  version: 6.38.1
+  resolution: "@babylonjs/core@npm:6.38.1"
+  checksum: 8a32ebcfc1a587adde7340e8e7c1ed15e67f9353c35cf8d1563854c1b86ec826a336349dd00a2f4e69fd481b00325bbda1482541fcdf470d43260483278a97de
+  languageName: node
+  linkType: hard
+
+"@babylonjs/loaders@npm:^6.19.1":
+  version: 6.38.1
+  resolution: "@babylonjs/loaders@npm:6.38.1"
+  peerDependencies:
+    "@babylonjs/core": ^6.0.0
+    babylonjs-gltf2interface: ^6.0.0
+  checksum: c446875d6d949d5d8ea94677bb04fe8137365f64e8c30f4eaa1ae87fde0a3ca863e15f99666b3e1da90c85ae3861a182a9c801e51b7c10b5b433fe10b8c8374d
+  languageName: node
+  linkType: hard
+
 "@bcoe/v8-coverage@npm:^0.2.3":
   version: 0.2.3
   resolution: "@bcoe/v8-coverage@npm:0.2.3"
@@ -6486,6 +6503,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"babylonjs-gltf2interface@npm:^6.38.1":
+  version: 6.38.1
+  resolution: "babylonjs-gltf2interface@npm:6.38.1"
+  checksum: c71df304ca18148fad555979e57364438184f6a080d28836838472a14175972e993ff2be17850a22e3fc8c6a42521781dfb6d7180b549298af71fcffc6afebe2
+  languageName: node
+  linkType: hard
+
 "babylonjs-gui-editor@npm:^5.51.0":
   version: 5.51.0
   resolution: "babylonjs-gui-editor@npm:5.51.0"
@@ -6529,6 +6553,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"babylonjs-loaders@npm:^6.19.1":
+  version: 6.38.1
+  resolution: "babylonjs-loaders@npm:6.38.1"
+  dependencies:
+    babylonjs: ^6.38.1
+    babylonjs-gltf2interface: ^6.38.1
+  checksum: a2ad6834a4af23e9e4efe207471f7241ee6c629f34550b82c9efc6c6fa9312c7636a17eac9f8db111898114d4a25130bbe96f34551c7e18af36723e8c77cdd6b
+  languageName: node
+  linkType: hard
+
 "babylonjs-materials@npm:^5.51.0":
   version: 5.51.0
   resolution: "babylonjs-materials@npm:5.51.0"
@@ -6552,6 +6586,13 @@ __metadata:
   version: 5.51.0
   resolution: "babylonjs@npm:5.51.0"
   checksum: 15a852419de99fb65916af0f02b6a6e27bbadbd4b40f079608df77c682925c775ce46137b0abd2afd1faabd2beec8f3f41789ffe363bff182f082da0f15f5daa
+  languageName: node
+  linkType: hard
+
+"babylonjs@npm:^6.19.1, babylonjs@npm:^6.38.1":
+  version: 6.38.1
+  resolution: "babylonjs@npm:6.38.1"
+  checksum: 8e484f6eb3944af62805ba1ef31fe01102b8daa721d7af9d1d9ddcb312d705044c59eae01ca6812a0152ea322af707d9196a299679a91073aa4a34801ac4d060
   languageName: node
   linkType: hard
 
@@ -13758,8 +13799,12 @@ __metadata:
   resolution: "myapp-monorepo@workspace:."
   dependencies:
     "@babel/runtime": ^7.18.9
+    "@babylonjs/core": ^6.19.1
+    "@babylonjs/loaders": ^6.19.1
     "@google-cloud/translate": ^8.0.2
     "@manypkg/cli": ^0.19.1
+    babylonjs: ^6.19.1
+    babylonjs-loaders: ^6.19.1
     eslint: ^8.21.0
     franc: ^6.1.0
     openai: ^4.12.1

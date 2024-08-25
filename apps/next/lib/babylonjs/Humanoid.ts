@@ -1,5 +1,6 @@
 import {
   AbstractMesh,
+  AnimationGroup,
   Bone,
   Color3,
   Debug,
@@ -12,79 +13,17 @@ import {
   Vector3,
 } from "babylonjs";
 import { random, sample } from "lodash";
-import myModel from "../models/Model3_11.json";
-import { playMorphTargetAnim } from "./utils";
+import { getMorphTargetIndex, playMorphTargetAnim } from "./utils";
+// Enable GLTF/GLB loader (side-effects)
+import "@babylonjs/loaders/glTF";
+import "babylonjs-loaders";
+import { ModelConfig } from "../types";
 
 type MyMesh = AbstractMesh | Mesh;
 
-type Anims =
-  | "idle1"
-  | "idle2"
-  | "idle3_hand_hips"
-  | "talking1"
-  | "talking2_head_shake"
-  | "talking3";
 export class Humanoid {
   name: string = "";
   skeleton: Skeleton | null = null;
-  morphTargetNames: string[] = [
-    "Face.M_F00_000_00_Fcl_ALL_Neutral",
-    "Face.M_F00_000_00_Fcl_ALL_Angry",
-    "Face.M_F00_000_00_Fcl_ALL_Fun",
-    "Face.M_F00_000_00_Fcl_ALL_Joy",
-    "Face.M_F00_000_00_Fcl_ALL_Sorrow",
-    "Face.M_F00_000_00_Fcl_ALL_Surprised",
-    "Face.M_F00_000_00_Fcl_BRW_Angry",
-    "Face.M_F00_000_00_Fcl_BRW_Fun",
-    "Face.M_F00_000_00_Fcl_BRW_Joy",
-    "Face.M_F00_000_00_Fcl_BRW_Sorrow",
-    "Face.M_F00_000_00_Fcl_BRW_Surprised",
-    "Face.M_F00_000_00_Fcl_EYE_Natural",
-    "Face.M_F00_000_00_Fcl_EYE_Angry",
-    "Face.M_F00_000_00_Fcl_EYE_Close",
-    "Face.M_F00_000_00_Fcl_EYE_Close_R",
-    "Face.M_F00_000_00_Fcl_EYE_Close_L",
-    "Face.M_F00_000_00_Fcl_Eye_Fun",
-    "Face.M_F00_000_00_Fcl_EYE_Joy",
-    "Face.M_F00_000_00_Fcl_EYE_Joy_R",
-    "Face.M_F00_000_00_Fcl_EYE_Joy_L",
-    "Face.M_F00_000_00_Fcl_EYE_Sorrow",
-    "Face.M_F00_000_00_Fcl_EYE_Surprised",
-    "Face.M_F00_000_00_Fcl_EYE_Spread",
-    "Face.M_F00_000_00_Fcl_EYE_Iris_Hide",
-    "Face.M_F00_000_00_Fcl_EYE_Highlight_Hide",
-    "Face.M_F00_000_00_Fcl_EYE_Extra",
-    "Face.M_F00_000_00_Fcl_MTH_Up",
-    "Face.M_F00_000_00_Fcl_MTH_Down",
-    "Face.M_F00_000_00_Fcl_MTH_Angry",
-    "Face.M_F00_000_00_Fcl_MTH_Neutral",
-    "Face.M_F00_000_00_Fcl_MTH_Fun",
-    "Face.M_F00_000_00_Fcl_MTH_Joy",
-    "Face.M_F00_000_00_Fcl_MTH_Sorrow",
-    "Face.M_F00_000_00_Fcl_MTH_Surprised",
-    "Face.M_F00_000_00_Fcl_MTH_SkinFung",
-    "Face.M_F00_000_00_Fcl_MTH_SkinFung_R",
-    "Face.M_F00_000_00_Fcl_MTH_SkinFung_L",
-    "Face.M_F00_000_00_Fcl_MTH_A",
-    "Face.M_F00_000_00_Fcl_MTH_I",
-    "Face.M_F00_000_00_Fcl_MTH_U",
-    "Face.M_F00_000_00_Fcl_MTH_E",
-    "Face.M_F00_000_00_Fcl_MTH_O",
-    "Face.M_F00_000_00_Fcl_HA_Hide",
-    "Face.M_F00_000_00_Fcl_HA_Fung1",
-    "Face.M_F00_000_00_Fcl_HA_Fung1_Low",
-    "Face.M_F00_000_00_Fcl_HA_Fung1_Up",
-    "Face.M_F00_000_00_Fcl_HA_Fung2",
-    "Face.M_F00_000_00_Fcl_HA_Fung2_Low",
-    "Face.M_F00_000_00_Fcl_HA_Fung2_Up",
-    "Face.M_F00_000_00_Fcl_HA_Fung3",
-    "Face.M_F00_000_00_Fcl_HA_Fung3_Up",
-    "Face.M_F00_000_00_Fcl_HA_Fung3_Low",
-    "Face.M_F00_000_00_Fcl_HA_Short",
-    "Face.M_F00_000_00_Fcl_HA_Short_Up",
-    "Face.M_F00_000_00_Fcl_HA_Short_Low",
-    "EyeExtra_01.M_F00_000_00_EyeExtra_On",
-  ];
   intervalId: number = 0;
   mainMesh: AbstractMesh | Mesh | null = null;
   meshes: MyMesh[] = [];
@@ -98,68 +37,77 @@ export class Humanoid {
   isBlinkingLeftEye = false;
   isBlinkingRightEye = false;
   isTalking = false;
-  yOffset = 0.1;
-  currentAnimName: Anims | "" = "";
-  previousAnimName: Anims | "" = "";
+  currentAnimGroup: AnimationGroup | null = null;
+  currentAnimName: string = "";
+  animationGroups: AnimationGroup[] = [];
+  blinkTimeoutId: number | null = null;
 
   constructor(
-    private meshFileName: string,
     private modelName: any,
-    private scene: Scene,
-    private startAnim: Anims,
+    public scene: Scene,
+    private modelConfig: ModelConfig,
     private callback: () => void,
     private activate = true,
     private DEBUG = false
   ) {
-    this.name = this.meshFileName.split(".")[0];
     this.intervalId = window.setInterval(this.afterImport.bind(this), 300);
 
-    const modelDataString = JSON.stringify(myModel);
-    const modelDataBase64 = btoa(modelDataString);
-    const modelDataURL = `data:application/json;base64,${modelDataBase64}`;
+    // SceneLoader.ImportMeshAsync("", "/", modelDataURL, this.scene, null).then((res) => {
 
-    SceneLoader.ImportMeshAsync("", "/", modelDataURL, this.scene, null).then((res) => {
-      this.skeleton = res.skeletons[0];
-      this.meshes = res.meshes;
-      this.mainMesh = res.meshes[0];
-      this.setFaceMesh();
+    SceneLoader.ImportMesh(
+      "",
+      "/",
+      this.modelName + ".glb",
+      scene,
+      (meshes, particleSystems, skeletons, animationGroups) => {
+        this.skeleton = skeletons[0];
+        this.meshes = meshes;
+        this.mainMesh = meshes[0];
+        this.setFaceMesh();
+        this.animationGroups = animationGroups;
 
-      for (const mesh of res.meshes) {
-        mesh.position.y += this.yOffset;
-        mesh.alwaysSelectAsActiveMesh = true;
+        for (const mesh of meshes) {
+          mesh.position.addInPlace(this.modelConfig.positionOffset);
+          mesh.alwaysSelectAsActiveMesh = true;
 
-        // Only show when all meshes are rendered. This is an alternative to scene.executeWhenReady
-        // HACK! Way of hiding the mesh that actually renders the mesh (doing .isVisible = false will not render the mesh)
-        // mesh.position.z = 1000;
-        // (mesh as Mesh).onAfterRenderObservable.addOnce((renderedMesh) => {
-        //   this.renderedMeshes.add(renderedMesh.name);
-        // });
-      }
+          // Only show when all meshes are rendered. This is an alternative to scene.executeWhenReady
+          // HACK! Way of hiding the mesh that actually renders the mesh (doing .isVisible = false will not render the mesh)
+          // mesh.position.z = 1000;
+          // (mesh as Mesh).onAfterRenderObservable.addOnce((renderedMesh) => {
+          //   this.renderedMeshes.add(renderedMesh.name);
+          // });
+        }
 
-      this.mainMesh.skeleton = this.skeleton;
+        this.mainMesh.skeleton = this.skeleton;
 
-      // Improves performance when we're picking stuff with rays. Also, this doesn't work (meshes deformed with rigs are on GPU, picking is done with CPU).
-      // In order to pick the mesh, we'll use the this.colliders boxes.
-      this.mainMesh.isPickable = false;
-      // XXX: If this is false, how come cc collides the mesh with the ground??? BECAUSE it sets an ellipsoid, and calls moveWithCollision().
-      // ... so no need for checkCollisions to be true.
-      this.mainMesh.checkCollisions = false;
+        // Improves performance when we're picking stuff with rays. Also, this doesn't work (meshes deformed with rigs are on GPU, picking is done with CPU).
+        // In order to pick the mesh, we'll use the this.colliders boxes.
+        this.mainMesh.isPickable = false;
+        // XXX: If this is false, how come cc collides the mesh with the ground??? BECAUSE it sets an ellipsoid, and calls moveWithCollision().
+        // ... so no need for checkCollisions to be true.
+        this.mainMesh.checkCollisions = false;
 
-      this.mainMesh.receiveShadows = false;
+        this.mainMesh.receiveShadows = false;
 
-      this.setAnim(this.startAnim);
+        this.setAnim(this.modelConfig.initialAnimation);
 
-      // Rotate the character, so the z axis is pointing forward.
-      this.mainMesh.rotation.y = Math.PI;
+        // Rotate the character, so the z axis is pointing forward.
+        this.mainMesh.rotation.y = Math.PI;
 
-      if (!this.activate) this.mainMesh.setEnabled(false);
+        if (!this.activate) this.mainMesh.setEnabled(false);
 
-      // Handle mesh shadows, backface culling, etc.
-      // this.childMeshes = childMeshes
-      // this.processChildMeshes()
+        // Handle mesh shadows, backface culling, etc.
+        // this.childMeshes = childMeshes
+        // this.processChildMeshes()
 
-      if (this.DEBUG) this.DEBUGSTUFF();
-    });
+        if (this.DEBUG) this.DEBUGSTUFF();
+      },
+      undefined,
+      (scene, errorMessage, errorObj) => {
+        console.error("Error loading mesh:", errorMessage, "\nerrorObj:", errorObj);
+      },
+      ".glb"
+    );
   }
 
   hide() {
@@ -201,13 +149,14 @@ export class Humanoid {
 
       this.loaded = true;
 
-      // XXX: WARNING: Without this... you'll get the t-poses in between anim change.
+      // NOTE: The following enableBlending is for regular bone animations, not animation groups.
+      // XXX: WARNING: Without this, you'll get the t-poses in between anim change.
       // https://www.html5gamedevs.com/topic/32712-animation-interpolation-and-blendingspeed/
-      this.skeleton.enableBlending(0.1);
+      // this.skeleton.enableBlending(0.1);
 
       this.callback();
 
-      window.setTimeout(() => this.blink(), 2000);
+      this.blinkTimeoutId = window.setTimeout(() => this.blink(), 2000);
 
       // Debug the talking animations.
       // this.talkAnimationStart();
@@ -241,54 +190,57 @@ export class Humanoid {
     }
   }
 
-  // Can be a pose, or anim, or a frame. (a pose is an anim with only 1 frame I guess)
-  // Why use animName, if we could just pass in the frame??? Because skeleton.beginAnimation uses the animName to begin. IT'S EASIER.
-  setAnim(animName: Anims, poseFrame = -1, startPaused = false, onAnimationEnd?: () => void) {
+  // XXX: NOTE: When a .glb file is loaded, an animation group starts automatically.
+  // Probably the first one on the list of animation groups.
+  stopAllAnimationGroups() {
+    for (const animationGroup of this.animationGroups) {
+      animationGroup.stop();
+    }
+  }
+
+  setAnim(animName: string, startPaused = false, onAnimationEnd?: () => void) {
     if (!this.skeleton) {
       return;
     }
 
-    const startSpeedRatio = 1;
+    const startSpeedRatio = 1.0;
 
     // Don't remember why I added this here :shrug:
     //this.disableSkeletonBlending();
 
+    // This getAnimationRanges works for animation ranges - but not for animation groups.
+    // And .glb files have animation groups.
     // console.log("skeleton animation names:", this.skeleton.getAnimationRanges());
 
+    const animationGroup = this.scene.getAnimationGroupByName(animName);
+
+    if (!animationGroup) {
+      console.error("animationGroup is null :(");
+      return;
+    }
+
+    this.stopAllAnimationGroups();
+
     // If there is a onAnimationEnd callback, then we DO NOT want to loop the current anim.
-    let animatable = this.skeleton.beginAnimation(
-      animName,
-      !onAnimationEnd,
-      startSpeedRatio,
-      onAnimationEnd
-    );
+    animationGroup.start(!onAnimationEnd, startSpeedRatio);
 
-    let animRange = this.skeleton.getAnimationRange(animName);
-
-    if (!animRange) {
-      console.error("animRange is null :(");
-      return;
+    // XXX: This onAnimationEnd logic was not tested.
+    // (I also don't think it's being used anywhere)
+    if (onAnimationEnd) {
+      animationGroup.onAnimationEndObservable.addOnce(() => {
+        if (onAnimationEnd) onAnimationEnd();
+      });
     }
-
-    if (!animatable) {
-      console.error("animatable is null :(");
-      return;
-    }
-
-    // If no poseFrame was passed in (-1 is the default value), use the first frame of the anim.
-    if (poseFrame == -1) poseFrame = animRange.from;
-
-    // animatable.goToFrame(poseFrame);
 
     if (startPaused) {
-      animatable.pause();
+      animationGroup.pause();
     }
 
-    // NOTE: previousAnimName and currentAnimName are not currently used.
-    this.previousAnimName = this.currentAnimName;
     this.currentAnimName = animName;
+    this.currentAnimGroup = animationGroup;
 
-    this.skeleton.enableBlending(0.05);
+    // The following enables blending when not using animation groups.
+    // this.skeleton.enableBlending(0.05);
   }
 
   disableSkeletonBlending() {
@@ -299,30 +251,37 @@ export class Humanoid {
     });
   }
 
-  getMorphTargetByName(morphTargetName: string): MorphTarget | null {
-    if (!this.faceMesh?.morphTargetManager) {
-      console.error("faceMesh is null or does not have a morphTargetManager :(");
+  getMorphTargetByName(morphTargetName: string | undefined): MorphTarget | null {
+    if (!morphTargetName) {
       return null;
     }
 
-    const morphTargetIndex = this.morphTargetNames.indexOf(morphTargetName);
+    const morphTargetManager = this.faceMesh?.morphTargetManager;
+
+    if (!morphTargetManager) {
+      console.log("faceMesh is null or does not have a morphTargetManager :(");
+      return null;
+    }
+
+    const morphTargetIndex = getMorphTargetIndex(morphTargetManager, morphTargetName);
 
     if (morphTargetIndex === -1) {
       console.error("morphTargetIndex is -1 :(");
       return null;
     }
 
-    return this.faceMesh.morphTargetManager.getTarget(morphTargetIndex);
+    return morphTargetManager.getTarget(morphTargetIndex);
   }
 
   setFaceMesh() {
     const faceMeshArray = this.meshes.filter((mesh) => {
-      return mesh.name === "Face";
+      return mesh.name === this.modelConfig.faceMeshName;
     });
+
     const faceMesh = faceMeshArray[0] as Mesh;
 
     if (!faceMesh) {
-      console.error("Error - couldn't find face mesh :(");
+      console.warn("Couldn't find face mesh :( no face morph targets will be available.");
       return;
     }
 
@@ -337,8 +296,12 @@ export class Humanoid {
     const blinkOpenTimeSeconds = 0.15;
     const blinkCloseTimeSeconds = 0.2;
 
-    const leftEyeCloseTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_EYE_Close_L");
-    const rightEyeCloseTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_EYE_Close_R");
+    const leftEyeCloseTarget = this.getMorphTargetByName(
+      this.modelConfig.morphTargets.leftEyeClose
+    );
+    const rightEyeCloseTarget = this.getMorphTargetByName(
+      this.modelConfig.morphTargets.rightEyeClose
+    );
 
     if (!leftEyeCloseTarget || !rightEyeCloseTarget) {
       return;
@@ -358,7 +321,7 @@ export class Humanoid {
         return;
       }
 
-      window.setTimeout(() => this.blink(), random(2000, 8000));
+      this.blinkTimeoutId = window.setTimeout(() => this.blink(), random(2000, 8000));
     };
 
     playMorphTargetAnim(
@@ -379,17 +342,17 @@ export class Humanoid {
     );
   }
 
-  getRandomIdleAnim(): Anims {
+  getRandomIdleAnim(): string {
     // NOTE: idle1 also exists, but it's not very good.
-    const idleAnims: Anims[] = ["idle3_hand_hips", "idle2"];
+    const idleAnims: string[] = ["idle3_hand_hips", "idle2"];
 
     // NOTE: The | "idle3_hand_hips" is there only to make TypeScript happy.
     return sample(idleAnims) || "idle3_hand_hips";
   }
 
-  getRandomTalkingAnim(): Anims {
+  getRandomTalkingAnim(): string {
     //const talkingAnims: Anims[] = ["talking1", "talking3"];
-    const talkingAnims: Anims[] = ["talking1", "talking2_head_shake", "talking3"];
+    const talkingAnims: string[] = ["talking1", "talking2_head_shake", "talking3"];
 
     // NOTE: The | "talking3" is there only to make TypeScript happy.
     return sample(talkingAnims) || "talking3";
@@ -423,13 +386,9 @@ export class Humanoid {
     const maxTime = 0.5;
     const minTime = 0.2;
 
-    const aTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_MTH_A");
-    // const eTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_MTH_E");
-    // const iTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_MTH_I");
-    // const oTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_MTH_O");
-    // const uTarget = this.getMorphTargetByName("Face.M_F00_000_00_Fcl_MTH_U");
+    const mouthOpenTarget = this.getMorphTargetByName(this.modelConfig.morphTargets.mouthMovement);
 
-    if (!aTarget) {
+    if (!mouthOpenTarget) {
       return;
     }
 
@@ -449,7 +408,7 @@ export class Humanoid {
         "aSoundAnim",
         [0, random(minTime, maxTime), random(minTime, maxTime)],
         [0, 1, 0],
-        aTarget,
+        mouthOpenTarget,
         vowelAnimEnd,
         this.scene
       );
@@ -459,7 +418,7 @@ export class Humanoid {
       "aSoundAnim",
       [0, random(minTime, maxTime), random(minTime, maxTime)],
       [0, 1, 0],
-      aTarget,
+      mouthOpenTarget,
       vowelAnimEnd,
       this.scene
     );
@@ -471,18 +430,32 @@ export class Humanoid {
     ////// Play talking body animation.
 
     // this.setAnim(sample(talkingAnims) || "talking3");
-    const alternateBetweenAnims = (currentAnim: Anims, nextAnim: Anims) => {
+    const alternateBetweenAnims = (currentAnim: string, nextAnim: string) => {
       // console.log("alternateBetweenAnims - this.isTalking", this.isTalking);
       if (!this.isTalking) {
         return;
       }
 
-      this.setAnim(currentAnim, -1, false, () => {
+      this.setAnim(currentAnim, false, () => {
         alternateBetweenAnims(nextAnim, currentAnim);
       });
     };
 
     alternateBetweenAnims(this.getRandomTalkingAnim(), this.currentAnimName || "idle3_hand_hips");
+  }
+
+  dispose() {
+    this.scene.stopAllAnimations();
+
+    // Remove all animation groups:
+    // https://forum.babylonjs.com/t/proper-way-to-disconnect-and-reconnect-an-animation-group-in-scene/38878/9
+    this.scene.animationGroups = [];
+
+    if (this.blinkTimeoutId !== null) {
+      window.clearTimeout(this.blinkTimeoutId);
+    }
+
+    this.mainMesh?.dispose();
   }
 
   DEBUGSTUFF() {
@@ -506,9 +479,6 @@ export class Humanoid {
 
       // var dummyBox = new MeshBuilder.CreateBox("dummyBox", { size: 0.05 }, this.scene)
       // var CoTAxis = localAxes(1, 0); CoTAxis.parent = dummyBox
-
-      //var LBreastAxesViewer = new Debug.BoneAxesViewer(scene, LBreastBoneTipObject, mainMesh);
-      //var RBreastAxesViewer = new Debug.BoneAxesViewer(scene, RBreastBone, mainMesh);
 
       this.skeletonViewer = new Debug.SkeletonViewer(this.skeleton, this.mainMesh, this.scene);
       this.skeletonViewer.isEnabled = true;

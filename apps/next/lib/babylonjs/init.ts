@@ -8,10 +8,10 @@ import {
   Nullable,
   Scene,
 } from "babylonjs";
-import { CanvasThatDoesNotReRenderProps } from "pages";
+import { models } from "../constants";
 import { handleError } from "../error";
+import { CameraConfig, Model } from "../types";
 import { isBabylonInspectorShowing } from "../utils";
-import { Humanoid } from "./Humanoid";
 import { createCamera } from "./objects";
 import { v3 } from "./utils";
 
@@ -41,10 +41,12 @@ const enableCollisions = (scene: Scene, camera: ArcRotateCamera) => {
   scene.collisionsEnabled = true;
 };
 
+let isLoading = true;
+
 export const initBabylon = (
   setIsLoading: (isLoading: boolean) => void,
-  humanoidRef: CanvasThatDoesNotReRenderProps["humanoidRef"]
-) => {
+  modelName: Model
+): Scene => {
   console.log("Initializing scene...");
 
   // Get the canvas DOM element
@@ -59,15 +61,11 @@ export const initBabylon = (
 
   // Load the 3D engine
   let engine: Engine;
-  try {
-    engine = new Engine(canvas, true, {
-      preserveDrawingBuffer: true,
-      stencil: true,
-    });
-  } catch (e: any) {
-    console.error(e.message);
-    return e.message;
-  }
+
+  engine = new Engine(canvas, true, {
+    preserveDrawingBuffer: true,
+    stencil: true,
+  });
 
   // function customLoadingScreen() {
   //   console.log("customLoadingScreen creation");
@@ -80,25 +78,24 @@ export const initBabylon = (
   // XXX: NOTE: This is really important to tell Babylon.js to use decomposeLerp and matrix interpolation
   BABYLON.Animation.AllowMatricesInterpolation = true;
 
-  var scene = createScene(engine, canvas);
+  var scene = createScene(engine, models[modelName].cameraConfig, canvas);
 
-  // First time loading this character. Create a new Humanoid instance.
-  humanoidRef.current = new Humanoid(
-    "MyMesh",
-    "Model3_11.babylon",
-    scene,
-    "idle3_hand_hips",
-    () => {
-      // console.log("After import callback called!");
-    }
-  );
+  // Handle animation group blending and loop animations by default.
+  scene.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
+  scene.animationPropertiesOverride.enableBlending = true;
+  scene.animationPropertiesOverride.blendingSpeed = 0.05;
+  scene.animationPropertiesOverride.loopMode = 1;
 
   engine.runRenderLoop(function () {
     // NOTE: The following executeWhenReady makes sure we only show stuff when everything is:
     // - Done loading
     // - Done rendering (including shaders and stuff)
+
     scene.executeWhenReady(() => {
-      setIsLoading(false);
+      if (isLoading) {
+        setIsLoading(false);
+        isLoading = false;
+      }
       scene.render();
     });
   });
@@ -107,17 +104,23 @@ export const initBabylon = (
   window.addEventListener("resize", function () {
     engine.resize();
   });
+
+  return scene;
 };
 
 // CreateScene function that creates and return the scene
-const createScene = function (engine: Engine, canvas: HTMLCanvasElement) {
+const createScene = function (
+  engine: Engine,
+  cameraConfig: CameraConfig,
+  canvas: HTMLCanvasElement
+) {
   // Create a basic BJS Scene object
   const scene = new Scene(engine);
   // Create a FreeCamera, and set its position to {x: 0, y: 5, z: -10}
   // const camera = new ArcRotateCamera("Steve", Math.PI / 2, 0, 4, v3(), scene);
 
   // const camera = createCameraWithAxesInCorner(scene);
-  const camera = createCamera(scene);
+  const camera = createCamera(scene, cameraConfig);
 
   // Attach the camera to the canvas
   camera.attachControl(canvas, true);
