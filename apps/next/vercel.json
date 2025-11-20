@@ -1,7 +1,8 @@
 {
   "build": {
     "env": {
-      "YARN_VERSION": "3.6.0"
+      "YARN_VERSION": "3.6.0",
+      "NODE_VERSION": "22.x"
     }
   }
 }
