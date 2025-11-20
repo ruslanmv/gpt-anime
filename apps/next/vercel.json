@@ -1,8 +1,15 @@
 {
   "build": {
     "env": {
-      "YARN_VERSION": "3.6.0",
-      "NODE_VERSION": "22.x"
+      "YARN_VERSION": "3.6.0"
+    }
+  },
+  "buildCommand": "yarn build",
+  "installCommand": "yarn install",
+  "framework": "nextjs",
+  "functions": {
+    "pages/api/**/*.ts": {
+      "maxDuration": 60
     }
   }
 }

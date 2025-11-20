@@ -1,6 +1,121 @@
 import { ChatMessage } from "@my/ui/types/Chat";
 import { createParser, ParsedEvent, ReconnectInterval } from "eventsource-parser";
 
+// ============================================
+// WatsonX.ai Integration
+// ============================================
+
+export type WatsonXPayload = {
+  model_id: string;
+  messages: Array<{ role: string; content: string }>;
+  parameters: {
+    max_new_tokens?: number;
+    temperature?: number;
+    decoding_method?: string;
+  };
+  project_id: string;
+};
+
+export type WatsonXResponse = {
+  results: Array<{
+    generated_text: string;
+    generated_token_count: number;
+    input_token_count: number;
+    stop_reason: string;
+  }>;
+  model_id: string;
+  created_at: string;
+};
+
+/**
+ * Get IBM Cloud IAM access token
+ */
+async function getIAMToken(apiKey: string): Promise<string> {
+  const response = await fetch("https://iam.cloud.ibm.com/identity/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: `grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey=${apiKey}`,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`IBM IAM Token Error: ${errorData.errorMessage || response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+/**
+ * Call WatsonX.ai chat completion API
+ */
+export const WatsonX = async (
+  messages: ChatMessage[],
+  apiKey: string,
+  projectId: string,
+  modelId: string = "ibm/granite-3-8b-instruct",
+  maxTokens: number = 200,
+  temperature: number = 0.3
+): Promise<string> => {
+  // Get IAM token
+  const accessToken = await getIAMToken(apiKey);
+
+  // WatsonX.ai expects messages in a specific format
+  // For Granite models, we need to format the conversation
+  const conversationText = messages
+    .map((msg) => {
+      if (msg.role === "system" || msg.role === "assistant") {
+        return `Assistant: ${msg.content}`;
+      } else {
+        return `User: ${msg.content}`;
+      }
+    })
+    .join("\n\n");
+
+  const finalPrompt = `${conversationText}\n\nAssistant:`;
+
+  const requestBody = {
+    model_id: modelId,
+    input: finalPrompt,
+    parameters: {
+      max_new_tokens: maxTokens,
+      temperature: temperature,
+      decoding_method: "greedy",
+    },
+    project_id: projectId,
+  };
+
+  const response = await fetch(
+    "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      `WatsonX API Error: ${errorData.error || errorData.message || response.statusText}`
+    );
+  }
+
+  const data = await response.json();
+
+  // Extract the generated text
+  if (data.results && data.results.length > 0) {
+    return data.results[0].generated_text.trim();
+  }
+
+  throw new Error("No response generated from WatsonX");
+};
+
 export type OpenAIStreamPayload = {
   model: string;
   messages: ChatMessage[];

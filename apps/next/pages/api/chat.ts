@@ -1,5 +1,5 @@
 import { ChatMessage } from "@my/ui/types/Chat";
-import { OpenAI, OpenAIPayload, synthesizeSpeechMulti } from "lib/backendUtils";
+import { WatsonX, synthesizeSpeechMulti } from "lib/backendUtils";
 import { dummyBotAudio, dummyBotMessages } from "lib/dummyResponses";
 
 const MAX_REQUEST_BODY_LENGTH = 1200;
@@ -14,8 +14,12 @@ const initialBotMessage: ChatMessage = {
 
 const USE_DUMMY_MESSAGES = false;
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("Missing env var from OpenAI");
+if (!process.env.WATSONX_API_KEY) {
+  throw new Error("Missing env var WATSONX_API_KEY");
+}
+
+if (!process.env.WATSONX_PROJECT_ID) {
+  throw new Error("Missing env var WATSONX_PROJECT_ID");
 }
 
 export const config = {
@@ -46,17 +50,6 @@ export default async function handler(req: Request): Promise<Response> {
   // Prepend the initial bot message containing the prompt.
   messages.unshift(initialBotMessage);
 
-  const payload: OpenAIPayload = {
-    model: "gpt-3.5-turbo",
-    messages,
-    temperature: 0.7,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    max_tokens: 200,
-    n: 1,
-  };
-
   if (USE_DUMMY_MESSAGES) {
     const message = dummyBotMessages[0];
     const audio = dummyBotAudio[0];
@@ -78,11 +71,18 @@ export default async function handler(req: Request): Promise<Response> {
   let language = "";
 
   try {
-    const response = await OpenAI(payload);
-    aiResponse = response.choices[0]?.message.content;
+    // Call WatsonX.ai with Granite model
+    aiResponse = await WatsonX(
+      messages,
+      process.env.WATSONX_API_KEY!,
+      process.env.WATSONX_PROJECT_ID!,
+      process.env.WATSONX_MODEL_ID || "ibm/granite-3-8b-instruct",
+      200, // max_tokens
+      0.3  // temperature
+    );
   } catch (error) {
     console.error(error);
-    return new Response(JSON.stringify({ error: "Error processing OpenAI response." }), {
+    return new Response(JSON.stringify({ error: "Error processing WatsonX response." }), {
       status: 500,
     });
   }
