@@ -1,0 +1,14 @@
+# Gradio application dependencies for Hugging Face Space
+
+# Core dependencies
+gradio>=4.0.0
+numpy>=1.24.0
+python-dateutil>=2.8.2
+
+# Optional: For enhanced features
+# Uncomment if you want to add AI/ML capabilities
+# transformers>=4.30.0
+# torch>=2.0.0
+
+# For better performance
+httpx>=0.24.0
